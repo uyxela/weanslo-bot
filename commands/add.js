@@ -6,15 +6,17 @@ module.exports = {
   name: "add",
   description: "Add a new hackathon",
   args: true,
-  aliases: ["new"],
+  aliases: ["new", "save"],
   usage: "<url>",
   cooldown: 1,
   execute(message, args) {
-    const url = args[0];
+    const url = (args[0].startsWith("https://") ? "" : "https://") + args[0];
+
     axios
       .get(url)
-      .then(res => res.text())
+      .then(res => res.data)
       .then(body => {
+        // console.log("body", body);
         let data = body.match(
           /<script type="application\/ld\+json" id="challenge-json-ld">([^<]*)<\/script>/
         );
@@ -29,10 +31,16 @@ module.exports = {
           description: _.unescape(data.description).replace(/<[^>]*>?/gm, ""),
           deadline: Date.parse(data.endDate),
           url: data.url,
-          status: "Upcoming"
+          status: 1
         };
 
-        addItem(hackathon);
+        console.log("hackathon", hackathon);
+
+        try {
+          message.channel.send(addItem(hackathon));
+        } catch (error) {
+          message.channel.send(error);
+        }
       });
   }
 };
