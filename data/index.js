@@ -12,9 +12,9 @@ const save = data => {
   try {
     data.sort((a, b) => {
       if (a.status > b.status) {
-        return true;
+        return -1;
       } else if (a.status < b.status) {
-        return false;
+        return 1;
       } else {
         return a.deadline - b.deadline;
       }
@@ -22,7 +22,7 @@ const save = data => {
     data.forEach((entry, i) => {
       entry.id = i;
     });
-    fs.writeFileSync("data/hackathons.json", JSON.stringify(data));
+    fs.writeFileSync("data/hackathons.json", JSON.stringify(data, null, "\t"));
     return true;
   } catch (error) {
     console.log(error);
@@ -34,7 +34,7 @@ const addItem = item => {
   let hackathons = getAll();
   hackathons.forEach(hackathon => {
     if (hackathon.url === item.url) {
-      throw "A hackathon with the same URL already exists!";
+      return "A hackathon with the same URL already exists!";
     }
   });
   hackathons.push(item);
@@ -68,12 +68,17 @@ const getOne = id => {
   return hackathons.find(hackathon => hackathon.id === id);
 };
 
-const updateOne = (id, data) => {
+const getCurrentAndUpcoming = () => {
+  let hackathons = getAll();
+  return hackathons.filter(hackathon => hackathon.status !== 0);
+};
+
+const setStatus = (id, status) => {
   let updated = false;
   let hackathons = getAll();
-  hackathons.forEach((hackathon, i) => {
+  hackathons.forEach(hackathon => {
     if (hackathon.id === id) {
-      hackathon[i] = data;
+      hackathon.status = status;
       updated = true;
     }
   });
@@ -86,10 +91,44 @@ const updateOne = (id, data) => {
   }
 };
 
+const setSubmitted = (id, url) => {
+  console.log("id", id, "url", url);
+  let updated = false;
+  let hackathons = getAll();
+  hackathons.forEach(hackathon => {
+    if (hackathon.id === id) {
+      hackathon.submission = url;
+      hackathon.status = 0;
+      updated = true;
+    }
+  });
+  if (updated) {
+    return save(hackathons)
+      ? "The hackathon was successfully updated!"
+      : "Oh no, something went wrong!";
+  } else {
+    return "No hackathon with that ID was found!";
+  }
+};
+
+const getStatus = status => {
+  switch (status) {
+    case 0:
+      return "Submitted";
+    case 1:
+      return "Upcoming";
+    case 2:
+      return "Current";
+  }
+};
+
 module.exports = {
   addItem,
   removeItem,
   getAll,
   getOne,
-  updateOne
+  getCurrentAndUpcoming,
+  setStatus,
+  setSubmitted,
+  getStatus
 };

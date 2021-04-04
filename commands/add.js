@@ -16,7 +16,6 @@ module.exports = {
       .get(url)
       .then(res => res.data)
       .then(body => {
-        // console.log("body", body);
         let data = body.match(
           /<script type="application\/ld\+json" id="challenge-json-ld">([^<]*)<\/script>/
         );
@@ -31,11 +30,9 @@ module.exports = {
           description: _.unescape(data.description).replace(/<[^>]*>?/gm, ""),
           deadline: Date.parse(data.endDate),
           url: data.url,
+          image: data.image,
           status: 1
         };
-
-        console.log("hackathon", hackathon);
-
         try {
           message.channel.send(addItem(hackathon));
         } catch (error) {
